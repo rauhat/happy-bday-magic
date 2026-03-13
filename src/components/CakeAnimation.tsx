@@ -1,49 +1,37 @@
 import { useEffect, useState } from "react";
 
-const CAKE_LAYERS = [
-  { emoji: "🟫", label: "base", width: "w-32 sm:w-40 md:w-48", height: "h-8 sm:h-10" },
-  { emoji: "🟪", label: "middle", width: "w-24 sm:w-32 md:w-40", height: "h-8 sm:h-10" },
-  { emoji: "🩷", label: "top", width: "w-16 sm:w-24 md:w-32", height: "h-8 sm:h-10" },
-];
-
 const CakeAnimation = ({ onComplete }: { onComplete: () => void }) => {
   const [visibleLayers, setVisibleLayers] = useState(0);
   const [showCandle, setShowCandle] = useState(false);
+  const [showDrips, setShowDrips] = useState(false);
 
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
 
-    // Show layers one by one
-    CAKE_LAYERS.forEach((_, i) => {
-      timers.push(
-        setTimeout(() => setVisibleLayers(i + 1), 600 + i * 700)
-      );
-    });
+    // Show layers one by one (bottom to top)
+    for (let i = 0; i < 3; i++) {
+      timers.push(setTimeout(() => setVisibleLayers(i + 1), 600 + i * 700));
+    }
 
-    // Show candle after all layers
-    timers.push(
-      setTimeout(() => setShowCandle(true), 600 + CAKE_LAYERS.length * 700 + 400)
-    );
+    // Dripping cream after layers
+    timers.push(setTimeout(() => setShowDrips(true), 600 + 3 * 700 + 300));
 
-    // Signal completion
-    timers.push(
-      setTimeout(() => onComplete(), 600 + CAKE_LAYERS.length * 700 + 1200)
-    );
+    // Candle
+    timers.push(setTimeout(() => setShowCandle(true), 600 + 3 * 700 + 900));
+
+    // Done
+    timers.push(setTimeout(() => onComplete(), 600 + 3 * 700 + 1600));
 
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
 
-  const colors = [
-    "bg-[hsl(25,60%,45%)]",   // brown base
-    "bg-[hsl(330,60%,65%)]",   // pink middle  
-    "bg-[hsl(350,80%,70%)]",   // light pink top
+  const layers = [
+    { color: "#8B5E3C", width: "w-36 sm:w-44 md:w-52", height: "h-10 sm:h-12" },
+    { color: "#D4749A", width: "w-28 sm:w-36 md:w-44", height: "h-10 sm:h-12" },
+    { color: "#F9A8C9", width: "w-20 sm:w-28 md:w-36", height: "h-9 sm:h-11" },
   ];
 
-  const frostings = [
-    "bg-[hsl(45,90%,75%)]",    // golden frosting
-    "bg-[hsl(330,70%,75%)]",   // pink frosting
-    "bg-[hsl(0,80%,80%)]",     // light red frosting
-  ];
+  const dripHeights = [18, 28, 14, 22, 16, 26, 12, 20, 24, 15];
 
   return (
     <div className="flex flex-col items-center">
@@ -55,42 +43,79 @@ const CakeAnimation = ({ onComplete }: { onComplete: () => void }) => {
           transform: showCandle ? "translateY(0) scale(1)" : "translateY(20px) scale(0.5)",
         }}
       >
-        <div className="text-2xl sm:text-3xl animate-pulse mb-[-4px]">🔥</div>
-        <div className="w-1.5 h-6 sm:h-8 bg-[hsl(45,90%,75%)] rounded-full" />
+        <div className="text-2xl sm:text-3xl mb-[-6px]" style={{ animation: "pulse 1.5s ease-in-out infinite" }}>🔥</div>
+        <div
+          className="rounded-full"
+          style={{
+            width: 6,
+            height: 28,
+            background: "linear-gradient(to bottom, #FDE68A, #F59E0B)",
+          }}
+        />
       </div>
 
-      {/* Cake layers - rendered top to bottom */}
+      {/* Cake layers top to bottom */}
       <div className="flex flex-col items-center">
-        {[...CAKE_LAYERS].reverse().map((layer, reversedIndex) => {
-          const originalIndex = CAKE_LAYERS.length - 1 - reversedIndex;
-          const isVisible = visibleLayers > originalIndex;
+        {[...layers].reverse().map((layer, reversedIdx) => {
+          const origIdx = layers.length - 1 - reversedIdx;
+          const isVisible = visibleLayers > origIdx;
 
           return (
             <div
-              key={layer.label}
-              className="flex flex-col items-center transition-all duration-500"
+              key={origIdx}
+              className="relative flex flex-col items-center transition-all duration-500"
               style={{
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? "translateY(0) scale(1)" : "translateY(30px) scale(0.7)",
-                transitionDelay: "0ms",
               }}
             >
-              {/* Frosting drip */}
+              {/* Cream/frosting top */}
               <div
-                className={`${frostings[originalIndex]} rounded-full ${layer.width} h-2 sm:h-3`}
-                style={{ marginBottom: "-4px", zIndex: 2 }}
-              />
+                className={`${layer.width} relative`}
+                style={{ height: 6, marginBottom: -2, zIndex: 3 }}
+              >
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(to bottom, #FFF5E6, #FFE4B5)",
+                  }}
+                />
+                {/* Dripping cream */}
+                {showDrips &&
+                  dripHeights.map((h, di) => (
+                    <div
+                      key={di}
+                      className="absolute rounded-b-full"
+                      style={{
+                        left: `${8 + di * 9}%`,
+                        top: 4,
+                        width: 5,
+                        height: 0,
+                        background: "linear-gradient(to bottom, #FFE4B5, #FFD89B)",
+                        animation: `drip-down 0.8s ease-out ${di * 0.08}s forwards`,
+                        // target height encoded as CSS variable
+                        // @ts-ignore
+                        "--drip-h": `${h}px`,
+                      }}
+                    />
+                  ))}
+              </div>
+
               {/* Layer body */}
               <div
-                className={`${colors[originalIndex]} ${layer.width} ${layer.height} rounded-lg relative`}
-                style={{ zIndex: 1 }}
+                className={`${layer.width} ${layer.height} rounded-lg relative overflow-hidden`}
+                style={{
+                  background: `linear-gradient(to bottom, ${layer.color}, ${layer.color}dd)`,
+                  zIndex: 2,
+                }}
               >
-                {/* Decorations */}
-                <div className="absolute inset-0 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                  {originalIndex === 0 && "🍫🍫🍫"}
-                  {originalIndex === 1 && "🍓🍓🍓"}
-                  {originalIndex === 2 && "💖💖💖"}
-                </div>
+                {/* Subtle stripe decoration */}
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    background: `repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 5px)`,
+                  }}
+                />
               </div>
             </div>
           );
@@ -99,9 +124,22 @@ const CakeAnimation = ({ onComplete }: { onComplete: () => void }) => {
 
       {/* Plate */}
       <div
-        className="w-40 sm:w-48 md:w-56 h-2 bg-muted rounded-full mt-1 transition-opacity duration-300"
-        style={{ opacity: visibleLayers > 0 ? 1 : 0 }}
+        className="mt-1 rounded-full transition-opacity duration-300"
+        style={{
+          width: "clamp(10rem, 20vw, 16rem)",
+          height: 6,
+          background: "linear-gradient(to bottom, #E5E7EB, #D1D5DB)",
+          opacity: visibleLayers > 0 ? 1 : 0,
+        }}
       />
+
+      {/* Drip keyframes injected via style tag */}
+      <style>{`
+        @keyframes drip-down {
+          0% { height: 0; opacity: 0.5; }
+          100% { height: var(--drip-h, 20px); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

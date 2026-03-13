@@ -32,7 +32,7 @@ const Index = () => {
           transform: showText ? "translateY(0) scale(1)" : "translateY(20px) scale(0.8)",
         }}
       >
-        Happy Birthday!
+        Happy Birthday Boss!
       </h1>
 
       {/* Subtitle in Kazakh */}
