@@ -14,7 +14,12 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-4">
+    <div
+      className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4"
+      style={{
+        background: "linear-gradient(135deg, hsl(30,50%,95%) 0%, hsl(340,40%,93%) 40%, hsl(260,35%,93%) 70%, hsl(200,40%,93%) 100%)",
+      }}
+    >
       {showConfetti && <Confetti />}
       <FloatingEmoji />
 
